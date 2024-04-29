@@ -10,7 +10,8 @@
     "seed": "node -r dotenv/config ./scripts/seed.mjs",
     "type-check": "tsc --noEmit",
     "format:write": "prettier --write \"{app,lib,components}/**/*.{ts,tsx,mdx}\" --cache",
-    "format:check": "prettier --check \"{app,lib,components}**/*.{ts,tsx,mdx}\" --cache"
+    "format:check": "prettier --check \"{app,lib,components}**/*.{ts,tsx,mdx}\" --cache",
+    "db:push": "drizzle-kit push:sqlite"
   },
   "dependencies": {
     "@radix-ui/react-alert-dialog": "^1.0.5",
@@ -24,9 +25,8 @@
     "@radix-ui/react-switch": "^1.0.3",
     "@radix-ui/react-tooltip": "^1.0.7",
     "@vercel/analytics": "^1.1.2",
-    "@vercel/kv": "^1.0.1",
     "@vercel/og": "^0.6.2",
-    "ai": "^3.0.12",
+    "better-sqlite3": "^9.6.0",
     "class-variance-authority": "^0.7.0",
     "clsx": "^2.1.0",
     "d3-scale": "^4.0.2",
@@ -67,6 +67,7 @@
     "eslint-plugin-tailwindcss": "^3.14.0",
     "postcss": "^8.4.33",
     "prettier": "^3.2.4",
+    "prisma": "^5.13.0",
     "tailwind-merge": "^2.2.0",
     "tailwindcss": "^3.4.1",
     "tailwindcss-animate": "^1.0.7",

@@ -5,11 +5,11 @@ import { ThemeToggle } from '@/components/theme-toggle'
 import { cache } from 'react'
 
 interface SidebarListProps {
-  userId?: string
+  userId: string
   children?: React.ReactNode
 }
 
-const loadChats = cache(async (userId?: string) => {
+const loadChats = cache(async (userId: string) => {
   return await getChats(userId)
 })
 

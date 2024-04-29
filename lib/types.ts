@@ -1,13 +1,10 @@
-import { Message } from 'ai'
+import { Message } from '@/database/schema'
 
-export interface Chat extends Record<string, any> {
+export interface Chat {
   id: string
   title: string
-  createdAt: Date
   userId: string
-  path: string
   messages: Message[]
-  sharePath?: string
 }
 
 export type ServerActionResult<Result> = Promise<
@@ -17,21 +14,4 @@ export type ServerActionResult<Result> = Promise<
     }
 >
 
-export interface Session {
-  user: {
-    id: string
-    email: string
-  }
-}
-
-export interface AuthResult {
-  type: string
-  message: string
-}
-
-export interface User extends Record<string, any> {
-  id: string
-  email: string
-  password: string
-  salt: string
-}
+export type Stream = ReadableStream<Uint8Array>

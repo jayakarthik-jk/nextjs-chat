@@ -7,8 +7,8 @@ import { CodeBlock } from '../ui/codeblock'
 import { MemoizedReactMarkdown } from '../markdown'
 import remarkGfm from 'remark-gfm'
 import remarkMath from 'remark-math'
-import { StreamableValue } from 'ai/rsc'
 import { useStreamableText } from '@/lib/hooks/use-streamable-text'
+import { Stream } from '@/lib/types'
 
 // Different types of message bubbles.
 
@@ -29,11 +29,10 @@ export function BotMessage({
   content,
   className
 }: {
-  content: string | StreamableValue<string>
+  content: Stream
   className?: string
 }) {
   const text = useStreamableText(content)
-
   return (
     <div className={cn('group relative flex items-start md:-ml-12', className)}>
       <div className="flex size-[24px] shrink-0 select-none items-center justify-center rounded-md border bg-primary text-primary-foreground shadow-sm">
@@ -47,7 +46,7 @@ export function BotMessage({
             p({ children }) {
               return <p className="mb-2 last:mb-0">{children}</p>
             },
-            code({ node, inline, className, children, ...props }) {
+            code({ inline, className, children, ...props }) {
               if (children.length) {
                 if (children[0] == '▍') {
                   return (

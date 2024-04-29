@@ -1,5 +1,3 @@
-import { type Session } from '@/lib/types'
-
 import { Button } from '@/components/ui/button'
 import {
   DropdownMenu,
@@ -9,6 +7,7 @@ import {
   DropdownMenuTrigger
 } from '@/components/ui/dropdown-menu'
 import { signOut } from '@/auth'
+import { Session } from 'next-auth'
 
 export interface UserMenuProps {
   user: Session['user']
