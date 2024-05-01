@@ -1,4 +1,4 @@
-import { Message } from '@/database/schema'
+import { Message } from '@prisma/client'
 
 export interface Chat {
   id: string
@@ -14,4 +14,4 @@ export type ServerActionResult<Result> = Promise<
     }
 >
 
-export type Stream = ReadableStream<Uint8Array>
+export type Stream = ReadableStream<Uint8Array> | string

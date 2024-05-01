@@ -1,6 +1,6 @@
 'use client'
 
-import { IconOpenAI, IconUser } from '@/components/ui/icons'
+import { IconOpenAI, IconSpinner, IconUser } from '@/components/ui/icons'
 import { cn } from '@/lib/utils'
 import { spinner } from './spinner'
 import { CodeBlock } from '../ui/codeblock'
@@ -26,60 +26,68 @@ export function UserMessage({ children }: { children: React.ReactNode }) {
 }
 
 export function BotMessage({
-  content,
-  className
+  children: content,
+  className,
+  onSuccess
 }: {
-  content: Stream
+  children: Stream
   className?: string
+  onSuccess?: (content: string) => void
 }) {
-  const text = useStreamableText(content)
+  const text = useStreamableText(content, onSuccess)
   return (
     <div className={cn('group relative flex items-start md:-ml-12', className)}>
       <div className="flex size-[24px] shrink-0 select-none items-center justify-center rounded-md border bg-primary text-primary-foreground shadow-sm">
         <IconOpenAI />
       </div>
       <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1">
-        <MemoizedReactMarkdown
-          className="prose break-words dark:prose-invert prose-p:leading-relaxed prose-pre:p-0"
-          remarkPlugins={[remarkGfm, remarkMath]}
-          components={{
-            p({ children }) {
-              return <p className="mb-2 last:mb-0">{children}</p>
-            },
-            code({ inline, className, children, ...props }) {
-              if (children.length) {
-                if (children[0] == '▍') {
+        {text === '' ? (
+          <IconSpinner className="mr-2 animate-spin" />
+        ) : (
+          <MemoizedReactMarkdown
+            className="prose break-words dark:prose-invert prose-p:leading-relaxed prose-pre:p-0"
+            remarkPlugins={[remarkGfm, remarkMath]}
+            components={{
+              p({ children }) {
+                return <p className="mb-2 last:mb-0">{children}</p>
+              },
+              code({ inline, className, children, ...props }) {
+                if (children.length) {
+                  if (children[0] == '▍') {
+                    return (
+                      <span className="mt-1 animate-pulse cursor-default">
+                        ▍
+                      </span>
+                    )
+                  }
+
+                  children[0] = (children[0] as string).replace('`▍`', '▍')
+                }
+
+                const match = /language-(\w+)/.exec(className || '')
+
+                if (inline) {
                   return (
-                    <span className="mt-1 animate-pulse cursor-default">▍</span>
+                    <code className={className} {...props}>
+                      {children}
+                    </code>
                   )
                 }
 
-                children[0] = (children[0] as string).replace('`▍`', '▍')
-              }
-
-              const match = /language-(\w+)/.exec(className || '')
-
-              if (inline) {
                 return (
-                  <code className={className} {...props}>
-                    {children}
-                  </code>
+                  <CodeBlock
+                    key={Math.random()}
+                    language={(match && match[1]) || ''}
+                    value={String(children).replace(/\n$/, '')}
+                    {...props}
+                  />
                 )
               }
-
-              return (
-                <CodeBlock
-                  key={Math.random()}
-                  language={(match && match[1]) || ''}
-                  value={String(children).replace(/\n$/, '')}
-                  {...props}
-                />
-              )
-            }
-          }}
-        >
-          {text}
-        </MemoizedReactMarkdown>
+            }}
+          >
+            {text}
+          </MemoizedReactMarkdown>
+        )}
       </div>
     </div>
   )

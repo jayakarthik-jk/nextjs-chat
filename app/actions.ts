@@ -1,36 +1,25 @@
 // @ts-nocheck
 'use server'
 
-import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
 import { auth } from '@/auth'
 import { type Chat } from '@/lib/types'
-import { db } from '@/database/db'
-import { chats } from '@/database/schema'
-import { eq } from 'drizzle-orm'
+import { db } from '@/db'
 
 export async function getChats(userId?: string | null): Promise<Chat[]> {
   if (!userId) {
     return []
   }
-  const result = await db.query.chats.findMany({
-    where: eq(chats.userId, userId),
-    with: {
-      messages: true
-    }
+  return await db.chat.findMany({
+    where: { userId },
+    include: { messages: true }
   })
-  return result
 }
 
-export async function getChat(
-  id: string,
-  userId: string
-): Promise<Chat | null> {
-  // const chat = await kv.hgetall<Chat>(`chat:${id}`)
-  // if (!chat || (userId && chat.userId !== userId)) {
-  //   return null
-  // }
-  // return chat
+export async function getChat(id: string): Promise<Chat | null> {
+  return db.chat.findUnique({
+    where: { id },
+    include: { messages: true }
+  })
 }
 
 export async function removeChat({
@@ -46,20 +35,9 @@ export async function removeChat({
     }
   }
 
-  //Convert uid to string for consistent comparison with session.user.id
-  // const uid = String(await kv.hget(`chat:${id}`, 'userId'))
-
-  // if (uid !== session?.user?.id) {
-  //   return {
-  //     error: 'Unauthorized'
-  //   }
-  // }
-
-  // await kv.del(`chat:${id}`)
-  // await kv.zrem(`user:chat:${session.user.id}`, `chat:${id}`)
-
-  revalidatePath('/')
-  return revalidatePath()
+  await db.chat.delete({
+    where: { id }
+  })
 }
 
 export async function clearChats(): Promise<{ error: string }> {
@@ -71,19 +49,26 @@ export async function clearChats(): Promise<{ error: string }> {
     }
   }
 
-  // const chats: string[] = await kv.zrange(`user:chat:${session.user.id}`, 0, -1)
-  // if (!chats.length) {
-  //   return redirect('/')
-  // }
-  // const pipeline = kv.pipeline()
+  await db.chat.deleteMany({
+    where: { userId: session.user.id }
+  })
+}
 
-  // for (const chat of chats) {
-  //   pipeline.del(chat)
-  //   pipeline.zrem(`user:chat:${session.user.id}`, chat)
-  // }
-
-  // await pipeline.exec()
-
-  revalidatePath('/')
-  return redirect('/')
+export async function uploadMessage(
+  query: string,
+  response: string,
+  userId: string,
+  chatId: string
+) {
+  const title = 'Sample title'
+  await db.chat.upsert({
+    where: { id: chatId },
+    create: {
+      id: chatId,
+      title,
+      userId,
+      messages: { create: { query, response } }
+    },
+    update: { messages: { create: { query, response } } }
+  })
 }

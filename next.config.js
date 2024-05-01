@@ -1,9 +1,14 @@
 /** @type {import('next').NextConfig} */
 module.exports = {
-  webpack: config => {
-    config.resolve.fallback = { fs: false }
-
-    return config
+  experimental: {
+    turbo: {
+      rules: {
+        '*.svg': {
+          loaders: ['@svgr/webpack'],
+          as: '*.js'
+        }
+      }
+    }
   },
   images: {
     remotePatterns: [

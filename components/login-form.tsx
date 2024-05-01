@@ -3,7 +3,7 @@
 import Link from 'next/link'
 import React from 'react'
 import { IconSpinner } from './ui/icons'
-import { signIn } from '@/auth'
+import { signIn } from 'next-auth/react'
 
 export default function LoginForm() {
   return (
@@ -34,7 +34,7 @@ function LoginButton() {
         signIn('google').finally()
       }}
     >
-      {loading ? <IconSpinner /> : 'Log in'}
+      {loading ? <IconSpinner /> : 'Continue with Google'}
     </button>
   )
 }

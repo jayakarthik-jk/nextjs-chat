@@ -70,15 +70,15 @@ export function ChatPanel({
                       display: <UserMessage>{example.message}</UserMessage>
                     }
                   ])
-
                   const responseMessage = await submitUserMessage(
                     example.message
                   )
-
-                  setMessages(currentMessages => [
-                    ...currentMessages,
-                    responseMessage
-                  ])
+                  if (responseMessage) {
+                    setMessages(currentMessages => [
+                      ...currentMessages,
+                      responseMessage
+                    ])
+                  }
                 }}
               >
                 <div className="text-sm font-semibold">{example.heading}</div>

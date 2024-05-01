@@ -10,7 +10,7 @@ import { Toaster } from '@/components/ui/sonner'
 export const metadata = {
   metadataBase: process.env.VERCEL_URL
     ? new URL(`https://${process.env.VERCEL_URL}`)
-    : undefined,
+    : new URL(`http://localhost:3000`),
   title: {
     default: 'Legal Chatbot',
     template: `%s - Legal Chatbot`

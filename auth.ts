@@ -1,10 +1,11 @@
+import 'server-only'
+
 import Google from 'next-auth/providers/google'
 import NextAuth, { type NextAuthConfig } from 'next-auth'
-import { DrizzleAdapter } from '@auth/drizzle-adapter'
-import { db } from './database/db'
+import { PrismaAdapter } from '@auth/prisma-adapter'
+import { db } from './db'
 
 declare module 'next-auth' {
-  // @ts-ignore
   interface Session {
     user: {
       id: string
@@ -20,13 +21,28 @@ export const authConfig = {
     signIn: '/login',
     newUser: '/login'
   },
-  adapter: DrizzleAdapter(db) as NextAuthConfig['adapter'],
+  adapter: PrismaAdapter(db) as NextAuthConfig['adapter'],
   providers: [
     Google({
       clientId: process.env.GOOGLE_CLIENT_ID as string,
       clientSecret: process.env.GOOGLE_CLIENT_SECRET as string
     })
-  ]
+  ],
+  callbacks: {
+    session: ({ session, user }) => {
+      return {
+        ...session,
+        user: {
+          ...session.user,
+          ...user,
+          id: user.id
+        }
+      }
+    }
+  }
 } satisfies NextAuthConfig
 
-export const { auth, signIn, signOut } = NextAuth(authConfig)
+export const {
+  handlers: { GET, POST },
+  auth
+} = NextAuth(authConfig)
