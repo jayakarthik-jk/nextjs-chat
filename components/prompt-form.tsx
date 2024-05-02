@@ -3,9 +3,9 @@
 import * as React from 'react'
 import Textarea from 'react-textarea-autosize'
 
-import { UserMessage } from './stocks/message'
+import { UserMessage } from './message'
 import { Button } from '@/components/ui/button'
-import { IconArrowElbow, IconPlus } from '@/components/ui/icons'
+import { IconPlus, IconSpinner } from '@/components/ui/icons'
 import {
   Tooltip,
   TooltipContent,
@@ -15,6 +15,14 @@ import { useEnterSubmit } from '@/lib/hooks/use-enter-submit'
 import { nanoid } from 'nanoid'
 import { useRouter } from 'next/navigation'
 import { useChat } from '@/lib/hooks/useChat'
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue
+} from './ui/select'
+import { languages } from '@/lib/types'
 
 export function PromptForm({
   input,
@@ -26,7 +34,13 @@ export function PromptForm({
   const router = useRouter()
   const { formRef, onKeyDown } = useEnterSubmit()
   const inputRef = React.useRef<HTMLTextAreaElement>(null)
-  const { submitUserMessage, setMessages } = useChat()
+  const {
+    submitUserMessage,
+    setMessages,
+    currentLanguage,
+    setCurrentLanguage,
+    loading
+  } = useChat()
 
   React.useEffect(() => {
     if (inputRef.current) {
@@ -96,17 +110,32 @@ export function PromptForm({
           rows={1}
           value={input}
           onChange={e => setInput(e.target.value)}
+          disabled={loading}
         />
-        <div className="absolute right-0 top-[13px] sm:right-4">
-          <Tooltip>
-            <TooltipTrigger asChild>
-              <Button type="submit" size="icon" disabled={input === ''}>
-                <IconArrowElbow />
-                <span className="sr-only">Send message</span>
-              </Button>
-            </TooltipTrigger>
-            <TooltipContent>Send message</TooltipContent>
-          </Tooltip>
+        <div className="absolute right-0 sm:right-4 h-full flex justify-center items-center">
+          {loading ? (
+            <IconSpinner className="mr-2 animate-spin" />
+          ) : (
+            <Select
+              defaultValue="en"
+              value={currentLanguage}
+              onValueChange={setCurrentLanguage}
+            >
+              <SelectTrigger
+                className="w-[80px] flex justify-center items-center"
+                noIcon
+              >
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {languages.map(language => (
+                  <SelectItem value={language} key={language}>
+                    {language}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          )}
         </div>
       </div>
     </form>

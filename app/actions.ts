@@ -4,6 +4,7 @@
 import { auth } from '@/auth'
 import { type Chat } from '@/lib/types'
 import { db } from '@/db'
+import { titleChain } from '@/lib/langchain'
 
 export async function getChats(userId?: string | null): Promise<Chat[]> {
   if (!userId) {
@@ -54,21 +55,30 @@ export async function clearChats(): Promise<{ error: string }> {
   })
 }
 
+export async function generateTitle(query: string, response: string) {
+  return titleChain.invoke({ query, response })
+}
+
 export async function uploadMessage(
   query: string,
   response: string,
   userId: string,
   chatId: string
 ) {
-  const title = 'Sample title'
-  await db.chat.upsert({
+  const chat = await db.chat.findUnique({ where: { id: chatId } })
+  if (!chat) {
+    const title = await generateTitle(query, response)
+    await db.chat.create({
+      data: {
+        id: chatId,
+        title,
+        userId,
+        messages: { create: { query, response } }
+      }
+    })
+  }
+  db.chat.update({
     where: { id: chatId },
-    create: {
-      id: chatId,
-      title,
-      userId,
-      messages: { create: { query, response } }
-    },
-    update: { messages: { create: { query, response } } }
+    data: { messages: { create: { query, response } } }
   })
 }

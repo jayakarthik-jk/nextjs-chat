@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect } from 'react'
+import React from 'react'
 import { Stream } from '../types'
 
 const decoder = new TextDecoder()
@@ -11,7 +11,7 @@ export const useStreamableText = (
     typeof stream === 'string' ? stream : ''
   )
 
-  const initialize = useCallback(async () => {
+  const initialize = React.useCallback(async () => {
     if (typeof stream === 'string') return
     if (stream.locked) return
     let localContent = ''

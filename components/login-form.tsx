@@ -1,6 +1,5 @@
 'use client'
 
-import Link from 'next/link'
 import React from 'react'
 import { IconSpinner } from './ui/icons'
 import { signIn } from 'next-auth/react'
@@ -12,13 +11,6 @@ export default function LoginForm() {
         <h1 className="mb-3 text-2xl font-bold">Please log in to continue.</h1>
         <LoginButton />
       </div>
-
-      <Link
-        href="/signup"
-        className="flex flex-row gap-1 text-sm text-zinc-400"
-      >
-        No account yet? <div className="font-semibold underline">Sign up</div>
-      </Link>
     </div>
   )
 }

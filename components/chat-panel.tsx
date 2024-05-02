@@ -4,7 +4,7 @@ import { PromptForm } from '@/components/prompt-form'
 import { ButtonScrollToBottom } from '@/components/button-scroll-to-bottom'
 import { nanoid } from 'nanoid'
 import { useChat } from '@/lib/hooks/useChat'
-import { UserMessage } from './stocks/message'
+import { UserMessage } from './message'
 
 export interface ChatPanelProps {
   id?: string
