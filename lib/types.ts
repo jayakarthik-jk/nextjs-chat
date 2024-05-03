@@ -1,13 +1,10 @@
-import { Message } from 'ai'
+import { Message } from '@prisma/client'
 
-export interface Chat extends Record<string, any> {
+export interface Chat {
   id: string
   title: string
-  createdAt: Date
   userId: string
-  path: string
   messages: Message[]
-  sharePath?: string
 }
 
 export type ServerActionResult<Result> = Promise<
@@ -17,21 +14,10 @@ export type ServerActionResult<Result> = Promise<
     }
 >
 
-export interface Session {
-  user: {
-    id: string
-    email: string
-  }
-}
+export type Stream = ReadableStream<Uint8Array> | string
 
-export interface AuthResult {
-  type: string
-  message: string
-}
-
-export interface User extends Record<string, any> {
-  id: string
-  email: string
-  password: string
-  salt: string
-}
+export const languageMap = { English: 'en', தமிழ்: 'ta', हिंदी: 'hi' } as const
+export type Language = keyof typeof languageMap
+export const languages = Object.keys(languageMap) as Language[]
+export type LanguageCode = (typeof languageMap)[Language]
+export const languageCodes = Object.values(languageMap) as LanguageCode[]

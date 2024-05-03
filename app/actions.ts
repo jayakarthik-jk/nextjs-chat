@@ -1,46 +1,33 @@
+// @ts-nocheck
 'use server'
-
-import { revalidatePath } from 'next/cache'
-import { redirect } from 'next/navigation'
-import { kv } from '@vercel/kv'
 
 import { auth } from '@/auth'
 import { type Chat } from '@/lib/types'
+import { db } from '@/db'
+import { titleChain } from '@/lib/langchain'
 
-export async function getChats(userId?: string | null) {
+export async function getChats(userId?: string | null): Promise<Chat[]> {
   if (!userId) {
     return []
   }
-
-  try {
-    const pipeline = kv.pipeline()
-    const chats: string[] = await kv.zrange(`user:chat:${userId}`, 0, -1, {
-      rev: true
-    })
-
-    for (const chat of chats) {
-      pipeline.hgetall(chat)
-    }
-
-    const results = await pipeline.exec()
-
-    return results as Chat[]
-  } catch (error) {
-    return []
-  }
+  return await db.chat.findMany({
+    where: { userId },
+    include: { messages: true }
+  })
 }
 
-export async function getChat(id: string, userId: string) {
-  const chat = await kv.hgetall<Chat>(`chat:${id}`)
-
-  if (!chat || (userId && chat.userId !== userId)) {
-    return null
-  }
-
-  return chat
+export async function getChat(id: string): Promise<Chat | null> {
+  return db.chat.findUnique({
+    where: { id },
+    include: { messages: true }
+  })
 }
 
-export async function removeChat({ id, path }: { id: string; path: string }) {
+export async function removeChat({
+  id
+}: {
+  id: string
+}): Promise<void | { error: string }> {
   const session = await auth()
 
   if (!session) {
@@ -49,23 +36,12 @@ export async function removeChat({ id, path }: { id: string; path: string }) {
     }
   }
 
-  //Convert uid to string for consistent comparison with session.user.id
-  const uid = String(await kv.hget(`chat:${id}`, 'userId'))
-
-  if (uid !== session?.user?.id) {
-    return {
-      error: 'Unauthorized'
-    }
-  }
-
-  await kv.del(`chat:${id}`)
-  await kv.zrem(`user:chat:${session.user.id}`, `chat:${id}`)
-
-  revalidatePath('/')
-  return revalidatePath(path)
+  await db.chat.delete({
+    where: { id }
+  })
 }
 
-export async function clearChats() {
+export async function clearChats(): Promise<{ error: string }> {
   const session = await auth()
 
   if (!session?.user?.id) {
@@ -74,83 +50,35 @@ export async function clearChats() {
     }
   }
 
-  const chats: string[] = await kv.zrange(`user:chat:${session.user.id}`, 0, -1)
-  if (!chats.length) {
-    return redirect('/')
-  }
-  const pipeline = kv.pipeline()
-
-  for (const chat of chats) {
-    pipeline.del(chat)
-    pipeline.zrem(`user:chat:${session.user.id}`, chat)
-  }
-
-  await pipeline.exec()
-
-  revalidatePath('/')
-  return redirect('/')
+  await db.chat.deleteMany({
+    where: { userId: session.user.id }
+  })
 }
 
-export async function getSharedChat(id: string) {
-  const chat = await kv.hgetall<Chat>(`chat:${id}`)
-
-  if (!chat || !chat.sharePath) {
-    return null
-  }
-
-  return chat
+export async function generateTitle(query: string, response: string) {
+  return titleChain.invoke({ query, response })
 }
 
-export async function shareChat(id: string) {
-  const session = await auth()
-
-  if (!session?.user?.id) {
-    return {
-      error: 'Unauthorized'
-    }
-  }
-
-  const chat = await kv.hgetall<Chat>(`chat:${id}`)
-
-  if (!chat || chat.userId !== session.user.id) {
-    return {
-      error: 'Something went wrong'
-    }
-  }
-
-  const payload = {
-    ...chat,
-    sharePath: `/share/${chat.id}`
-  }
-
-  await kv.hmset(`chat:${chat.id}`, payload)
-
-  return payload
-}
-
-export async function saveChat(chat: Chat) {
-  const session = await auth()
-
-  if (session && session.user) {
-    const pipeline = kv.pipeline()
-    pipeline.hmset(`chat:${chat.id}`, chat)
-    pipeline.zadd(`user:chat:${chat.userId}`, {
-      score: Date.now(),
-      member: `chat:${chat.id}`
+export async function uploadMessage(
+  query: string,
+  response: string,
+  userId: string,
+  chatId: string
+) {
+  const chat = await db.chat.findUnique({ where: { id: chatId } })
+  if (!chat) {
+    const title = await generateTitle(query, response)
+    await db.chat.create({
+      data: {
+        id: chatId,
+        title,
+        userId,
+        messages: { create: { query, response } }
+      }
     })
-    await pipeline.exec()
-  } else {
-    return
   }
-}
-
-export async function refreshHistory(path: string) {
-  redirect(path)
-}
-
-export async function getMissingKeys() {
-  const keysRequired = ['OPENAI_API_KEY']
-  return keysRequired
-    .map(key => (process.env[key] ? '' : key))
-    .filter(key => key !== '')
+  db.chat.update({
+    where: { id: chatId },
+    data: { messages: { create: { query, response } } }
+  })
 }

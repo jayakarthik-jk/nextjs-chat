@@ -1,26 +1,31 @@
-import { StreamableValue, readStreamableValue } from 'ai/rsc'
-import { useEffect, useState } from 'react'
+import React from 'react'
+import { Stream } from '../types'
+
+const decoder = new TextDecoder()
 
 export const useStreamableText = (
-  content: string | StreamableValue<string>
+  stream: Stream,
+  onSuccess?: (content: string) => void
 ) => {
-  const [rawContent, setRawContent] = useState(
-    typeof content === 'string' ? content : ''
+  const [rawContent, setRawContent] = React.useState(
+    typeof stream === 'string' ? stream : ''
   )
 
-  useEffect(() => {
-    ;(async () => {
-      if (typeof content === 'object') {
-        let value = ''
-        for await (const delta of readStreamableValue(content)) {
-          console.log(delta)
-          if (typeof delta === 'string') {
-            setRawContent((value = value + delta))
-          }
-        }
-      }
-    })()
-  }, [content])
+  const initialize = React.useCallback(async () => {
+    if (typeof stream === 'string') return
+    if (stream.locked) return
+    let localContent = ''
+    for await (const delta of stream as any) {
+      setRawContent(value => {
+        const data = decoder.decode(delta)
+        localContent += data
+        return value + data
+      })
+    }
+    onSuccess?.(localContent)
+  }, [stream, onSuccess])
+
+  React.useEffect(() => void initialize(), [initialize])
 
   return rawContent
 }
