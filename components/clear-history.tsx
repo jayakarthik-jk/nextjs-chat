@@ -3,8 +3,6 @@
 import * as React from 'react'
 import { toast } from 'sonner'
 
-import { ServerActionResult } from '@/lib/types'
-import { Button } from '@/components/ui/button'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -16,11 +14,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger
 } from '@/components/ui/alert-dialog'
+import { Button } from '@/components/ui/button'
 import { IconSpinner } from '@/components/ui/icons'
+import { ServerActionResult } from '@/lib/types'
 
 interface ClearHistoryProps {
   isEnabled: boolean
-  clearChats: () => ServerActionResult<void>
+  clearChats: () => ServerActionResult<string>
 }
 
 export function ClearHistory({
@@ -54,8 +54,8 @@ export function ClearHistory({
               event.preventDefault()
               startTransition(async () => {
                 const result = await clearChats()
-                if (result && 'error' in result) {
-                  toast.error(result.error)
+                if (result) {
+                  toast.error(result)
                   return
                 }
 

@@ -1,10 +1,10 @@
-// @ts-nocheck
 'use server'
 
 import { auth } from '@/auth'
-import { type Chat } from '@/lib/types'
 import { db } from '@/db'
-import { titleChain } from '@/lib/langchain'
+import { getTitleChain } from '@/lib/langchain'
+import { type Chat } from '@/lib/types'
+import { revalidatePath } from 'next/cache'
 
 export async function getChats(userId?: string | null): Promise<Chat[]> {
   if (!userId) {
@@ -12,7 +12,12 @@ export async function getChats(userId?: string | null): Promise<Chat[]> {
   }
   return await db.chat.findMany({
     where: { userId },
-    include: { messages: true }
+    include: { messages: true },
+    orderBy: [
+      {
+        createdAt: 'desc'
+      }
+    ]
   })
 }
 
@@ -27,13 +32,11 @@ export async function removeChat({
   id
 }: {
   id: string
-}): Promise<void | { error: string }> {
+}): Promise<string | undefined> {
   const session = await auth()
 
   if (!session) {
-    return {
-      error: 'Unauthorized'
-    }
+    return 'Unauthorized'
   }
 
   await db.chat.delete({
@@ -41,13 +44,11 @@ export async function removeChat({
   })
 }
 
-export async function clearChats(): Promise<{ error: string }> {
+export async function clearChats(): Promise<string | undefined> {
   const session = await auth()
 
   if (!session?.user?.id) {
-    return {
-      error: 'Unauthorized'
-    }
+    return 'Unauthorized'
   }
 
   await db.chat.deleteMany({
@@ -56,6 +57,7 @@ export async function clearChats(): Promise<{ error: string }> {
 }
 
 export async function generateTitle(query: string, response: string) {
+  const titleChain = getTitleChain()
   return titleChain.invoke({ query, response })
 }
 
@@ -65,20 +67,23 @@ export async function uploadMessage(
   userId: string,
   chatId: string
 ) {
-  const chat = await db.chat.findUnique({ where: { id: chatId } })
-  if (!chat) {
-    const title = await generateTitle(query, response)
-    await db.chat.create({
-      data: {
-        id: chatId,
-        title,
-        userId,
-        messages: { create: { query, response } }
-      }
+  db.$transaction(async db => {
+    const chat = await db.chat.findUnique({ where: { id: chatId } })
+    if (!chat) {
+      const title = await generateTitle(query, response)
+      await db.chat.create({
+        data: {
+          id: chatId,
+          title,
+          userId,
+          messages: { create: { query, response } }
+        }
+      })
+      revalidatePath('/', 'layout')
+    }
+    db.chat.update({
+      where: { id: chatId },
+      data: { messages: { create: { query, response } } }
     })
-  }
-  db.chat.update({
-    where: { id: chatId },
-    data: { messages: { create: { query, response } } }
   })
 }

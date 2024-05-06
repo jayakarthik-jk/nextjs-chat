@@ -4,7 +4,6 @@ import { useRouter } from 'next/navigation'
 import * as React from 'react'
 import { toast } from 'sonner'
 
-import { ServerActionResult, type Chat } from '@/lib/types'
 import {
   AlertDialog,
   AlertDialogAction,
@@ -22,10 +21,11 @@ import {
   TooltipContent,
   TooltipTrigger
 } from '@/components/ui/tooltip'
+import { ServerActionResult, type Chat } from '@/lib/types'
 
 interface SidebarActionsProps {
   chat: Chat
-  removeChat: (args: { id: string }) => ServerActionResult<void>
+  removeChat: (args: { id: string }) => ServerActionResult<string>
 }
 
 export function SidebarActions({ chat, removeChat }: SidebarActionsProps) {
@@ -72,8 +72,8 @@ export function SidebarActions({ chat, removeChat }: SidebarActionsProps) {
                 startRemoveTransition(async () => {
                   const result = await removeChat({ id: chat.id })
 
-                  if (result && 'error' in result) {
-                    toast.error(result.error)
+                  if (result) {
+                    toast.error(result)
                     return
                   }
 

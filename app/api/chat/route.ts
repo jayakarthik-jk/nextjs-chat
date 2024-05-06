@@ -1,9 +1,11 @@
-import { z } from 'zod'
+import { uploadMessage } from '@/app/actions'
+import { auth } from '@/auth'
 import { db } from '@/db'
+import { getQueryChain } from '@/lib/langchain'
+import { translate } from '@/lib/translation'
 import { LanguageCode, languageCodes } from '@/lib/types'
 import { sleep } from '@/lib/utils'
-import { chain } from '@/lib/langchain'
-import { translate } from '@/lib/translation'
+import { z } from 'zod'
 
 const encoder = new TextEncoder()
 
@@ -13,7 +15,7 @@ const requestSchema = z.object({
   language: z.enum(languageCodes as [LanguageCode, ...LanguageCode[]])
 })
 
-async function getChatHistory(chatId: string) {
+async function getChats(chatId: string) {
   const messages = await db.message.findMany({
     where: { chatId },
     take: 5,
@@ -21,28 +23,33 @@ async function getChatHistory(chatId: string) {
   })
 
   return messages
-    .map(message => `USER: ${message.query}\nAI: ${message.response}`)
-    .join('\n')
 }
 
 export async function POST(request: Request): Promise<Response> {
+  const session = await auth()
+  if (!session) {
+    return new Response('UnAuthorized', { status: 401 })
+  }
   const body = await request.json()
+
   const validationResult = requestSchema.safeParse(body)
   if (!validationResult.success) {
     return new Response(validationResult.error.message, { status: 400 })
   }
   let { query, language, chatId } = validationResult.data
-
   query = await translate(query, language)
-
-  const history = await getChatHistory(chatId)
-  let response = await chain.invoke({ query, history })
-  response = await translate(response, 'en', language)
-
+  const chats = await getChats(chatId)
+  const history = chats
+    .map(chat => `USER: ${chat.query}\nAI: ${chat.response}`)
+    .join('\n')
+  const chain = await getQueryChain()
+  const response = await chain.invoke({ input: query, history })
+  const responseTxt = await translate(response.answer, 'en', language)
+  await uploadMessage(query, responseTxt, session.user.id, chatId)
   // tiny little Scam
   const responseStream = new ReadableStream<Uint8Array>({
     async start(controller) {
-      for (const chunk of response.split(' ')) {
+      for (const chunk of responseTxt.split(' ')) {
         const bytes = encoder.encode(chunk + ' ')
         controller.enqueue(bytes)
         await sleep(100)

@@ -1,11 +1,10 @@
 'use client'
-import { uploadMessage } from '@/app/actions'
 import { BotMessage, UserMessage } from '@/components/message'
+import { Message as MessageType } from '@prisma/client'
 import { nanoid } from 'nanoid'
 import { useSession } from 'next-auth/react'
 import React from 'react'
 import { toast } from 'sonner'
-import { Message as MessageType } from '@prisma/client'
 import { Language, languageMap, languages } from '../types'
 export type Message = {
   id: string
@@ -73,15 +72,7 @@ export function ChatProvider({
     if (response.ok && response.body) {
       return {
         id: nanoid(),
-        display: (
-          <BotMessage
-            onSuccess={(content: string) => {
-              uploadMessage(query, content, session.data.user.id, id)
-            }}
-          >
-            {response.body}
-          </BotMessage>
-        )
+        display: <BotMessage>{response.body}</BotMessage>
       }
     }
     toast.error('something went wrong.')

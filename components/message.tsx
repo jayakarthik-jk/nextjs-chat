@@ -1,13 +1,13 @@
 'use client'
 
-import { IconOpenAI, IconUser } from '@/components/ui/icons'
-import { cn } from '@/lib/utils'
-import { CodeBlock } from './ui/codeblock'
-import { MemoizedReactMarkdown } from './markdown'
-import remarkGfm from 'remark-gfm'
-import remarkMath from 'remark-math'
+import { IconBot, IconUser } from '@/components/ui/icons'
 import { useStreamableText } from '@/lib/hooks/use-streamable-text'
 import { Stream } from '@/lib/types'
+import { cn } from '@/lib/utils'
+import remarkGfm from 'remark-gfm'
+import remarkMath from 'remark-math'
+import { MemoizedReactMarkdown } from './markdown'
+import { CodeBlock } from './ui/codeblock'
 
 export function UserMessage({ children }: { children: React.ReactNode }) {
   return (
@@ -24,18 +24,16 @@ export function UserMessage({ children }: { children: React.ReactNode }) {
 
 export function BotMessage({
   children: content,
-  className,
-  onSuccess
+  className
 }: {
   children: Stream
   className?: string
-  onSuccess?: (content: string) => void
 }) {
-  const text = useStreamableText(content, onSuccess)
+  const text = useStreamableText(content)
   return (
     <div className={cn('group relative flex items-start md:-ml-12', className)}>
       <div className="flex size-[24px] shrink-0 select-none items-center justify-center rounded-md border bg-primary text-primary-foreground shadow-sm">
-        <IconOpenAI />
+        <IconBot />
       </div>
       <div className="ml-4 flex-1 space-y-2 overflow-hidden px-1">
         <MemoizedReactMarkdown

@@ -7,12 +7,7 @@ export interface Chat {
   messages: Message[]
 }
 
-export type ServerActionResult<Result> = Promise<
-  | Result
-  | {
-      error: string
-    }
->
+export type ServerActionResult<Result> = Promise<Result | undefined>
 
 export type Stream = ReadableStream<Uint8Array> | string
 

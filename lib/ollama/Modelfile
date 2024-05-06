@@ -1,0 +1,5 @@
+FROM ./model.gguf
+
+PARAMETER temperature 0.3
+PARAMETER repeat_penalty 1.2
+PARAMETER num_predict -1
