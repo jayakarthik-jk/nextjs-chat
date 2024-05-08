@@ -21,6 +21,7 @@ import {
   TooltipContent,
   TooltipTrigger
 } from '@/components/ui/tooltip'
+import { useStrings } from '@/lib/hooks/useStrings'
 import { ServerActionResult, type Chat } from '@/lib/types'
 
 interface SidebarActionsProps {
@@ -32,7 +33,7 @@ export function SidebarActions({ chat, removeChat }: SidebarActionsProps) {
   const router = useRouter()
   const [deleteDialogOpen, setDeleteDialogOpen] = React.useState(false)
   const [isRemovePending, startRemoveTransition] = React.useTransition()
-
+  const strings = useStrings()
   return (
     <>
       <div className="">
@@ -45,30 +46,28 @@ export function SidebarActions({ chat, removeChat }: SidebarActionsProps) {
               onClick={() => setDeleteDialogOpen(true)}
             >
               <IconTrash />
-              <span className="sr-only">Delete</span>
+              <span className="sr-only">{strings.delete}</span>
             </Button>
           </TooltipTrigger>
-          <TooltipContent>Delete chat</TooltipContent>
+          <TooltipContent>{strings.delete_chat}</TooltipContent>
         </Tooltip>
       </div>
       <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
-            <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
+            <AlertDialogTitle>{strings.delete_confirmation}</AlertDialogTitle>
             <AlertDialogDescription>
-              This will permanently delete your chat message and remove your
-              data from our servers.
+              {strings.delete_confirmation_description}
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel disabled={isRemovePending}>
-              Cancel
+              {strings.cancel}
             </AlertDialogCancel>
             <AlertDialogAction
               disabled={isRemovePending}
               onClick={event => {
                 event.preventDefault()
-                // @ts-ignore
                 startRemoveTransition(async () => {
                   const result = await removeChat({ id: chat.id })
 
@@ -85,7 +84,7 @@ export function SidebarActions({ chat, removeChat }: SidebarActionsProps) {
               }}
             >
               {isRemovePending && <IconSpinner className="mr-2 animate-spin" />}
-              Delete
+              {strings.delete}
             </AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>

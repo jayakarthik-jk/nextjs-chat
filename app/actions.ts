@@ -42,6 +42,8 @@ export async function removeChat({
   await db.chat.delete({
     where: { id }
   })
+
+  revalidatePath('/')
 }
 
 export async function clearChats(): Promise<string | undefined> {
@@ -54,6 +56,8 @@ export async function clearChats(): Promise<string | undefined> {
   await db.chat.deleteMany({
     where: { userId: session.user.id }
   })
+
+  revalidatePath('/')
 }
 
 export async function generateTitle(query: string, response: string) {
@@ -67,23 +71,27 @@ export async function uploadMessage(
   userId: string,
   chatId: string
 ) {
-  db.$transaction(async db => {
-    const chat = await db.chat.findUnique({ where: { id: chatId } })
-    if (!chat) {
-      const title = await generateTitle(query, response)
-      await db.chat.create({
-        data: {
-          id: chatId,
-          title,
-          userId,
-          messages: { create: { query, response } }
-        }
+  db.$transaction(
+    async db => {
+      const chat = await db.chat.findUnique({ where: { id: chatId } })
+      if (!chat) {
+        const title = await generateTitle(query, response)
+        await db.chat.create({
+          data: {
+            id: chatId,
+            title,
+            userId,
+            messages: { create: { query, response } }
+          }
+        })
+      }
+      db.chat.update({
+        where: { id: chatId },
+        data: { messages: { create: { query, response } } }
       })
-      revalidatePath('/', 'layout')
-    }
-    db.chat.update({
-      where: { id: chatId },
-      data: { messages: { create: { query, response } } }
-    })
-  })
+    },
+    { timeout: 1000 * 60 }
+  )
+
+  revalidatePath('/')
 }

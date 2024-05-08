@@ -37,8 +37,11 @@ export async function POST(request: Request): Promise<Response> {
     return new Response(validationResult.error.message, { status: 400 })
   }
   let { query, language, chatId } = validationResult.data
+
   query = await translate(query, language)
+
   const chats = await getChats(chatId)
+
   const history = chats
     .map(chat => `USER: ${chat.query}\nAI: ${chat.response}`)
     .join('\n')

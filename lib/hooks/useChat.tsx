@@ -5,7 +5,7 @@ import { nanoid } from 'nanoid'
 import { useSession } from 'next-auth/react'
 import React from 'react'
 import { toast } from 'sonner'
-import { Language, languageMap, languages } from '../types'
+import { useSelectedLanguage } from './useLanguage'
 export type Message = {
   id: string
   display: React.ReactNode
@@ -18,8 +18,6 @@ export type UIState = {
     messages: Message[] | ((oldMessages: Message[]) => Message[])
   ) => void
   submitUserMessage: (message: string) => Promise<Message | undefined>
-  currentLanguage: Language
-  setCurrentLanguage: (language: Language) => void
   loading: boolean
 }
 
@@ -48,10 +46,8 @@ export function ChatProvider({
       }
     ])
   )
-  const [currentLanguage, setCurrentLanguage] = React.useState<Language>(
-    languages[0]
-  )
   const [loading, setLoading] = React.useState(false)
+  const { selectedLanguageCode } = useSelectedLanguage()
   const session = useSession()
 
   async function handleUserMessageSubmit(
@@ -66,7 +62,7 @@ export function ChatProvider({
       body: JSON.stringify({
         query,
         chatId: id,
-        language: languageMap[currentLanguage]
+        language: selectedLanguageCode
       })
     }).finally(() => setLoading(false))
     if (response.ok && response.body) {
@@ -84,8 +80,6 @@ export function ChatProvider({
         messages,
         setMessages,
         submitUserMessage: handleUserMessageSubmit,
-        currentLanguage,
-        setCurrentLanguage,
         loading
       }}
     >

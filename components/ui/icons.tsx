@@ -13,7 +13,7 @@ export function IconBot({ className, ...props }: React.ComponentProps<'svg'>) {
       height="128"
       preserveAspectRatio="xMidYMid meet"
       className={cn(
-        'size-full translate-x-0 translate-y-0 translate-z-0 visible fill-current border',
+        'size-full translate-x-0 translate-y-0 translate-z-0 visible fill-white border',
         className
       )}
       id="Customer"

@@ -3,7 +3,6 @@
 import * as React from 'react'
 import Textarea from 'react-textarea-autosize'
 
-import { UserMessage } from './message'
 import { Button } from '@/components/ui/button'
 import { IconPlus, IconSpinner } from '@/components/ui/icons'
 import {
@@ -12,9 +11,12 @@ import {
   TooltipTrigger
 } from '@/components/ui/tooltip'
 import { useEnterSubmit } from '@/lib/hooks/use-enter-submit'
+import { useChat } from '@/lib/hooks/useChat'
+import { useSelectedLanguage } from '@/lib/hooks/useLanguage'
+import { useStrings } from '@/lib/hooks/useStrings'
 import { nanoid } from 'nanoid'
 import { useRouter } from 'next/navigation'
-import { useChat } from '@/lib/hooks/useChat'
+import { UserMessage } from './message'
 import {
   Select,
   SelectContent,
@@ -22,7 +24,6 @@ import {
   SelectTrigger,
   SelectValue
 } from './ui/select'
-import { languages } from '@/lib/types'
 
 export function PromptForm({
   input,
@@ -34,14 +35,11 @@ export function PromptForm({
   const router = useRouter()
   const { formRef, onKeyDown } = useEnterSubmit()
   const inputRef = React.useRef<HTMLTextAreaElement>(null)
-  const {
-    submitUserMessage,
-    setMessages,
-    currentLanguage,
-    setCurrentLanguage,
-    loading
-  } = useChat()
+  const { submitUserMessage, setMessages, loading } = useChat()
 
+  const { languages, selectedLanguage, setSelectedLanguage } =
+    useSelectedLanguage()
+  const strings = useStrings()
   React.useEffect(() => {
     if (inputRef.current) {
       inputRef.current.focus()
@@ -91,16 +89,16 @@ export function PromptForm({
               }}
             >
               <IconPlus />
-              <span className="sr-only">New Chat</span>
+              <span className="sr-only">{strings.new_chat}</span>
             </Button>
           </TooltipTrigger>
-          <TooltipContent>New Chat</TooltipContent>
+          <TooltipContent>{strings.new_chat}</TooltipContent>
         </Tooltip>
         <Textarea
           ref={inputRef}
           tabIndex={0}
           onKeyDown={onKeyDown}
-          placeholder="Send a message."
+          placeholder={strings.send_a_message}
           className="min-h-[60px] w-full resize-none bg-transparent px-4 py-[1.3rem] focus-within:outline-none sm:text-sm"
           autoFocus
           spellCheck={false}
@@ -118,8 +116,8 @@ export function PromptForm({
           ) : (
             <Select
               defaultValue="en"
-              value={currentLanguage}
-              onValueChange={setCurrentLanguage}
+              value={selectedLanguage}
+              onValueChange={setSelectedLanguage}
             >
               <SelectTrigger
                 className="w-[80px] flex justify-center items-center"

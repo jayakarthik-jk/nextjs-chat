@@ -1,9 +1,8 @@
-import * as React from 'react'
-
-import { PromptForm } from '@/components/prompt-form'
 import { ButtonScrollToBottom } from '@/components/button-scroll-to-bottom'
-import { nanoid } from 'nanoid'
+import { PromptForm } from '@/components/prompt-form'
 import { useChat } from '@/lib/hooks/useChat'
+import { useStrings } from '@/lib/hooks/useStrings'
+import { nanoid } from 'nanoid'
 import { UserMessage } from './message'
 
 export interface ChatPanelProps {
@@ -22,27 +21,39 @@ export function ChatPanel({
   scrollToBottom
 }: ChatPanelProps) {
   const { messages, setMessages, submitUserMessage } = useChat()
-
+  const strings = useStrings()
   const exampleMessages = [
     {
-      heading: 'What are the',
-      subheading: 'trending memecoins today?',
-      message: `What are the trending memecoins today?`
+      heading: strings.example_prompt_heading_1,
+      subheading: strings.example_prompt_subheading_1,
+      message:
+        strings.example_prompt_heading_1 +
+        ' ' +
+        strings.example_prompt_subheading_1
     },
     {
-      heading: 'What is the price of',
-      subheading: '$DOGE right now?',
-      message: 'What is the price of $DOGE right now?'
+      heading: strings.example_prompt_heading_2,
+      subheading: strings.example_prompt_subheading_2,
+      message:
+        strings.example_prompt_heading_2 +
+        ' ' +
+        strings.example_prompt_subheading_2
     },
     {
-      heading: 'I would like to buy',
-      subheading: '42 $DOGE',
-      message: `I would like to buy 42 $DOGE`
+      heading: strings.example_prompt_heading_3,
+      subheading: strings.example_prompt_subheading_3,
+      message:
+        strings.example_prompt_heading_3 +
+        ' ' +
+        strings.example_prompt_subheading_3
     },
     {
-      heading: 'What are some',
-      subheading: `recent events about $DOGE?`,
-      message: `What are some recent events about $DOGE?`
+      heading: strings.example_prompt_heading_4,
+      subheading: strings.example_prompt_subheading_4,
+      message:
+        strings.example_prompt_heading_4 +
+        ' ' +
+        strings.example_prompt_subheading_4
     }
   ]
 
