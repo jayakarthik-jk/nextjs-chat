@@ -84,11 +84,12 @@ export async function uploadMessage(
             messages: { create: { query, response } }
           }
         })
+      } else {
+        await db.chat.update({
+          where: { id: chatId },
+          data: { messages: { create: { query, response } } }
+        })
       }
-      db.chat.update({
-        where: { id: chatId },
-        data: { messages: { create: { query, response } } }
-      })
     },
     { timeout: 1000 * 60 }
   )
