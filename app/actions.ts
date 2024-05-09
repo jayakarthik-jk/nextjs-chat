@@ -82,7 +82,7 @@ export async function uploadMessage(
         await db.chat.create({
           data: {
             id: chatId,
-            title: translatedTitle,
+            title: translatedTitle ?? title,
             userId,
             messages: { create: { query, response } }
           }

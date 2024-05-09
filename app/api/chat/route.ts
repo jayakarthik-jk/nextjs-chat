@@ -38,7 +38,7 @@ export async function POST(request: Request): Promise<Response> {
   }
   let { query, language, chatId } = validationResult.data
 
-  query = await translate(query, language)
+  const translatedQuery = (await translate(query, language)) ?? query
 
   const chats = await getChats(chatId)
 
@@ -46,8 +46,12 @@ export async function POST(request: Request): Promise<Response> {
     .map(chat => `USER: ${chat.query}\nAI: ${chat.response}`)
     .join('\n')
   const chain = await getQueryChain()
-  const response = await chain.invoke({ input: query, history })
-  const responseTxt = await translate(response.answer, 'en', language)
+  const response = await chain.invoke({
+    input: translatedQuery,
+    history
+  })
+  const responseTxt =
+    (await translate(response.answer, 'en', language)) ?? response.answer
   void uploadMessage(query, responseTxt, session.user.id, chatId, language)
   // tiny little Scam
   const responseStream = new ReadableStream<Uint8Array>({
