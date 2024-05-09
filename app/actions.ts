@@ -3,7 +3,8 @@
 import { auth } from '@/auth'
 import { db } from '@/db'
 import { getTitleChain } from '@/lib/langchain'
-import { type Chat } from '@/lib/types'
+import { translate } from '@/lib/translation'
+import { LanguageCode, type Chat } from '@/lib/types'
 import { revalidatePath } from 'next/cache'
 
 export async function getChats(userId?: string | null): Promise<Chat[]> {
@@ -69,17 +70,19 @@ export async function uploadMessage(
   query: string,
   response: string,
   userId: string,
-  chatId: string
+  chatId: string,
+  language: LanguageCode
 ) {
   db.$transaction(
     async db => {
       const chat = await db.chat.findUnique({ where: { id: chatId } })
       if (!chat) {
         const title = await generateTitle(query, response)
+        const translatedTitle = await translate(title, 'en', language)
         await db.chat.create({
           data: {
             id: chatId,
-            title,
+            title: translatedTitle,
             userId,
             messages: { create: { query, response } }
           }

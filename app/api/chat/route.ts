@@ -48,7 +48,7 @@ export async function POST(request: Request): Promise<Response> {
   const chain = await getQueryChain()
   const response = await chain.invoke({ input: query, history })
   const responseTxt = await translate(response.answer, 'en', language)
-  await uploadMessage(query, responseTxt, session.user.id, chatId)
+  void uploadMessage(query, responseTxt, session.user.id, chatId, language)
   // tiny little Scam
   const responseStream = new ReadableStream<Uint8Array>({
     async start(controller) {
